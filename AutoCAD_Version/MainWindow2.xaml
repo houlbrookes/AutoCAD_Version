@@ -1,0 +1,131 @@
+﻿<Window x:Class="AutoCAD_Version.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AutoCAD_Version"
+        xmlns:validators="clr-namespace:AutoCAD_Version.Validators"
+        mc:Ignorable="d"
+        MinWidth="450"
+        Icon="Resources\AutoCAD.png" Background="{StaticResource FormBackground}"
+        DataContext="{DynamicResource windowDataContext}" 
+        Title="AutoCAD Version Checker" Height="500" Width="505">
+    <Window.Resources>
+        <!-- DataContext for the window -->
+        <local:MainWindowModel x:Key="windowDataContext" />
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="5,0,5,0" />
+            <Setter Property="Width" Value="100" />
+        </Style>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="Close" Executed="CommandBinding_Close"/>
+        <CommandBinding Command="Help" Executed="CommandBinding_Help"/>
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Key="X" Modifiers="Ctrl" Command="Close" />
+        <KeyBinding Key="P" Modifiers="Control" Command="{Binding Path=cmdPrint}" CommandParameter="{Binding ElementName=txtFilePath}"/>
+        <KeyBinding Key="B" Modifiers="Control" Command="{Binding Path=cmdBrowse}"/>
+    </Window.InputBindings>
+    <Grid Name="grdMain">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition />
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+            <Grid.InputBindings>
+            </Grid.InputBindings>
+            <Menu Grid.Row="0">
+                <MenuItem Header="File">
+                    <MenuItem Header="_Browse" Command="{Binding Path=cmdBrowse}" CommandParameter="{Binding Path=AutoCadPath}" InputGestureText="Ctrl+B" />
+                    <MenuItem Header="_Print" Command="{Binding Path=cmdPrint}"  CommandParameter="{Binding ElementName=txtFilePath}" InputGestureText="Ctrl+P" />
+                    <MenuItem Header="E_xit" Command="Close"  />
+                    <!--InputGestureText="Ctrl+X"-->
+                </MenuItem>
+                <MenuItem Header="Help" >
+                    <MenuItem Header="About" Command="Help"/>
+                </MenuItem>
+            </Menu>
+
+            <Grid Grid.Row="1" Margin="5">
+                <!-- Declare two rows -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="25"/>
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <!-- Declare two columns the first has fixed width -->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <!-- Row 0, Col 0 -->
+                <Label Target="{Binding ElementName=txtFilePath}"
+                       ToolTip="Folder to search for .DWG files in" Padding="0,3,0,0"
+                       >_Target Folder:</Label>
+                <!-- Row 1, Col 1 -->
+                <!-- TextBlock to hold the error content from txtFilePath-->
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ElementName=txtFilePath, Path=(Validation.Errors)[0].ErrorContent}" Foreground="Red" FontStyle="Italic" />
+                <!-- Row 0, Col 1 -->
+                <TextBox Grid.Row="0" Grid.Column="1"  Height="25"
+                         Tag="Enter target folder or use the browse button"  
+                         Name="txtFilePath" Style="{StaticResource ResourceKey=placeHolder}">
+                    <TextBox.Text>
+                        <Binding Path="AutoCadPath" 
+                                 Mode="TwoWay"
+                                 UpdateSourceTrigger="PropertyChanged"
+                                 ValidatesOnDataErrors="True"
+                                 ValidatesOnNotifyDataErrors="True"
+                                 NotifyOnValidationError="True"
+                             >
+                            <Binding.ValidationRules>
+                                <validators:FolderExistsValidator ValidatesOnTargetUpdated="True" />
+                            </Binding.ValidationRules>
+                        </Binding>
+                    </TextBox.Text>
+                </TextBox>
+            </Grid>
+            <!-- MainGrid Row 2 Col 0 -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Width="330">
+                <Button Name="btnBrowse" 
+                        ToolTip="Click to browse for the target folder then click Process Folder"
+                        Command="{Binding Path=CmdBrowse}" CommandParameter="{Binding Path=AutoCadPath}"
+                        >Browse</Button>
+            <Button Name="btnSearch"  
+                        ToolTip="Click to refresh the chosen folder"
+                        Command="{Binding Path=CmdExecute}" CommandParameter="{Binding Path=AutoCadPath}"
+                        >Refresh Folder</Button>
+            <Button Name="btnPrint" 
+                        ToolTip="Click to print this as a report"
+                        Command="{Binding Path=CmdPrint}" CommandParameter="{Binding Path=AutoCadPath}" 
+                        >Print</Button>
+            </StackPanel>
+            <ListView Grid.Row="3" Margin="5,6" Background="AliceBlue"
+                      ItemsSource="{Binding Path=FileList}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="File" Width="250"  >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Path=Filename}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Version" Width="60">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Path=Version}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        <StatusBar Grid.Row="4" Margin="5,0,5,5">
+            <StatusBarItem>
+                <TextBlock Text="{Binding Path=StatusBarText}" />
+            </StatusBarItem>
+        </StatusBar>
+        </Grid>
+</Window>
