@@ -128,7 +128,7 @@ namespace AutoCAD_Version
             // AutoCAD path must already exist because the command canExecute includes a valiator
 
             // create a list of FileVersion records from the folder
-            var FileList = fileSummary.GetFileList(path);
+            FileList = fileSummary.GetFileList(path);
 
             var summaryInfo = fileSummary.GetSummaryInfo();
             if (summaryInfo.versionsFound.Count() == 1)

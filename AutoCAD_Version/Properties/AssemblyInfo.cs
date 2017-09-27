@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("AutoCAD_Version")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Noveum Ltd")]
 [assembly: AssemblyProduct("AutoCAD_Version")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
