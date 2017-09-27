@@ -8,11 +8,11 @@
         mc:Ignorable="d"
         MinWidth="450"
         Icon="Resources\AutoCAD.png" Background="{StaticResource FormBackground}"
-        DataContext="{DynamicResource windowDataContext}" 
         Title="AutoCAD Version Checker" Height="500" Width="505">
+    <Window.DataContext>
+            <local:MainWindowModel />
+    </Window.DataContext>
     <Window.Resources>
-        <!-- DataContext for the window -->
-        <local:MainWindowModel x:Key="windowDataContext" />
         <Style TargetType="Button">
             <Setter Property="Margin" Value="5,0,5,0" />
             <Setter Property="Width" Value="100" />
@@ -23,9 +23,14 @@
         <CommandBinding Command="Help" Executed="CommandBinding_Help"/>
     </Window.CommandBindings>
     <Window.InputBindings>
-        <KeyBinding Key="X" Modifiers="Ctrl" Command="Close" />
-        <KeyBinding Key="P" Modifiers="Control" Command="{Binding Path=cmdPrint}" CommandParameter="{Binding ElementName=txtFilePath}"/>
-        <KeyBinding Key="B" Modifiers="Control" Command="{Binding Path=cmdBrowse}"/>
+        <KeyBinding Key="X" Modifiers="Ctrl" 
+                    Command="Close" />
+        <KeyBinding Key="P" Modifiers="Ctrl"
+                    Command="{Binding Path=CmdPrint}" 
+                    CommandParameter="{Binding Path=Text, ElementName=txtFilePath}"/>
+        <KeyBinding Key="B" Modifiers="Ctrl" 
+                    Command="{Binding Path=CmdBrowse}"
+                    CommandParameter="{Binding Path=Text, ElementName=txtFilePath}"/>
     </Window.InputBindings>
     <Grid Name="grdMain">
         <Grid.RowDefinitions>
@@ -35,14 +40,18 @@
             <RowDefinition />
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
-        <Grid.InputBindings>
-        </Grid.InputBindings>
         <Menu Grid.Row="0">
             <MenuItem Header="File">
-                <MenuItem Header="_Browse" Command="{Binding Path=cmdBrowse}" CommandParameter="{Binding Path=AutoCadPath}" InputGestureText="Ctrl+B" />
-                <MenuItem Header="_Print" Command="{Binding Path=cmdPrint}"  CommandParameter="{Binding ElementName=txtFilePath}" InputGestureText="Ctrl+P" />
-                <MenuItem Header="E_xit" Command="Close"  />
-                <!--InputGestureText="Ctrl+X"-->
+                <MenuItem Header="_Browse" 
+                          Command="{Binding Path=CmdBrowse}" 
+                          CommandParameter="{Binding Path=Text, ElementName=txtFilePath}" 
+                          InputGestureText="Ctrl+B" />
+                <MenuItem Header="_Print" 
+                          Command="{Binding Path=CmdPrint}"  
+                          CommandParameter="{Binding Path=Text, ElementName=txtFilePath}"
+                          InputGestureText="Ctrl+P" />
+                <MenuItem Header="E_xit" Command="Close" 
+                          InputGestureText="Ctrl+X"/>
             </MenuItem>
             <MenuItem Header="Help" >
                 <MenuItem Header="About" Command="Help"/>
@@ -66,7 +75,10 @@
                        >_Target Folder:</Label>
             <!-- Row 1, Col 1 -->
             <!-- TextBlock to hold the error content from txtFilePath-->
-            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ElementName=txtFilePath, Path=(Validation.Errors)[0].ErrorContent}" Foreground="Red" FontStyle="Italic" />
+            <TextBlock Grid.Row="1" Grid.Column="1" 
+                       Text="{Binding ElementName=txtFilePath, 
+                                      Path=(Validation.Errors).CurrentItem.ErrorContent}" 
+                       Foreground="Red" FontStyle="Italic" />
             <!-- Row 0, Col 1 -->
             <TextBox Grid.Row="0" Grid.Column="1"  Height="25"
                          Tag="Enter target folder or use the browse button"  
@@ -77,8 +89,7 @@
                                  UpdateSourceTrigger="PropertyChanged"
                                  ValidatesOnDataErrors="True"
                                  ValidatesOnNotifyDataErrors="True"
-                                 NotifyOnValidationError="True"
-                             >
+                                 NotifyOnValidationError="True">
                         <Binding.ValidationRules>
                             <validators:FolderExistsValidator ValidatesOnTargetUpdated="True" />
                         </Binding.ValidationRules>
@@ -87,18 +98,15 @@
             </TextBox>
         </Grid>
         <!-- MainGrid Row 2 Col 0 -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Width="330">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" >
             <Button Name="btnBrowse" 
                         ToolTip="Click to browse for the target folder then click Process Folder"
-                        Command="{Binding Path=CmdBrowse}" CommandParameter="{Binding Path=AutoCadPath}"
+                        Command="{Binding Path=CmdBrowse}"
+                        CommandParameter="{Binding Path=Text, ElementName=txtFilePath}"
                         >Browse</Button>
-            <Button Name="btnSearch"  
-                        ToolTip="Click to refresh the chosen folder"
-                        Command="{Binding Path=CmdExecute}" CommandParameter="{Binding Path=AutoCadPath}"
-                        >Refresh Folder</Button>
             <Button Name="btnPrint" 
                         ToolTip="Click to print this as a report"
-                        Command="{Binding Path=CmdPrint}" CommandParameter="{Binding Path=AutoCadPath}" 
+                        Command="{Binding Path=CmdPrint}" CommandParameter="{Binding Path=Text, ElementName=txtFilePath}" 
                         >Print</Button>
         </StackPanel>
         <ListView Grid.Row="3" Margin="5,6" Background="AliceBlue"

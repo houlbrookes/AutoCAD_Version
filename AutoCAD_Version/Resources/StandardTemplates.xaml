@@ -8,12 +8,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type TextBox}">
-
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="25"/>
                             <RowDefinition Height="25"/>
                         </Grid.RowDefinitions>
+
                         <TextBox Text="{Binding Path=Text,
                                                 RelativeSource={RelativeSource TemplatedParent}, 
                                                 Mode=TwoWay,
@@ -32,7 +32,7 @@
                                         <Setter.Value>
                                             <ControlTemplate>
                                                 <DockPanel>
-                                                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding [0].ErrorContent}" Foreground="Red" FontStyle="Italic"/>
+                                                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding Path=CurrentItem.ErrorContent}" Foreground="Red" FontStyle="Italic"/>
                                                     <Border BorderBrush="Red" BorderThickness="1">
                                                         <AdornedElementPlaceholder/>
                                                     </Border>
