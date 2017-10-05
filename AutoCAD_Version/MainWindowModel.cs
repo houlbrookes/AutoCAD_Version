@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Diagnostics.Contracts;
 
 namespace AutoCAD_Version
 {
@@ -17,49 +18,69 @@ namespace AutoCAD_Version
     {
 
         #region FileList Property
-        ObservableCollection<FileVersion> _FileList = new ObservableCollection<FileVersion>();
+        private ObservableCollection<FileVersion> _fileList = new ObservableCollection<FileVersion>();
         public ObservableCollection<FileVersion> FileList
         {
-            get => _FileList;
-            set => SetValue(ref _FileList, value);
+            get => _fileList;
+            set => SetValue(ref _fileList, value);
         }
         #endregion
 
         #region AutoCADPath Property
-        string _AutoCadPath = "";
+        private string _autoCadPath = "";
         public string AutoCadPath
         {
-            get => _AutoCadPath;
-            set => SetValue(ref _AutoCadPath, value);
+            get => _autoCadPath;
+            set => SetValue(ref _autoCadPath, value);
         }
         #endregion
 
         #region StatusBarText Property
-        string _StatusBarText = "";
+        private string _statusBarText = "";
         public string StatusBarText
         {
-            get => _StatusBarText;
-            set => SetValue(ref _StatusBarText, value);
+            get => _statusBarText;
+            set => SetValue(ref _statusBarText, value);
         }
         #endregion
 
         /// <summary>
         /// Command to browse for folder
         /// </summary>
-        public ICommand CmdBrowse { get; set; }
+        #region CmdBrowse Property
+        private ICommand _cmdBrowse = null;
+        public ICommand CmdBrowse
+        {
+            get => _cmdBrowse;
+            private set => SetValue(ref _cmdBrowse, value);
+        }
+        #endregion
 
         /// <summary>
         /// Command to print versions
         /// </summary>
-        public ICommand CmdPrint { get; set; }
+        #region CmdBrowse Property
+        private ICommand _cmdPrint = new WpfHelpers.GenericCommand<string>(param => System.Windows.MessageBox.Show("{param}"), _ => true);
+        public ICommand CmdPrint
+        {
+            get => _cmdPrint;
+            private set => SetValue(ref _cmdPrint, value);
+        }
+        #endregion
 
-        private FileSummary fileSummary = new FileSummary();
+        private FileSummary _fileSummary = new FileSummary();
 
         /// <summary>
         /// Construtor, sets up commands and reads VersionLookup from App.config
         /// </summary>
         public MainWindowModel()
         {
+            Contract.Requires(_cmdBrowse == null);
+            Contract.Requires(_cmdPrint == null);
+
+            Contract.Ensures(_cmdBrowse != null);
+            Contract.Ensures(_cmdPrint != null);
+
             CmdBrowse = new WpfHelpers.GenericCommand<string>(GetAutoCADFolder, AlwaysTrue);
             CmdPrint = new WpfHelpers.GenericCommand<string>(Print, IsValidPath);
 
@@ -69,15 +90,33 @@ namespace AutoCAD_Version
             bool AlwaysTrue(string _) => true;
         }
 
+        [ContractInvariantMethod]
+        protected void ObjectInvariant()
+        {
+            Contract.Invariant(FileList != null);
+            Contract.Invariant(_fileSummary != null);
+        }
+
+
+        [ContractAbbreviator]
+        private void StateNotChanged()
+        {
+            Contract.Ensures(_fileList == Contract.OldValue(_fileList));
+            Contract.Ensures(_fileSummary == Contract.OldValue(_fileSummary));
+            Contract.Ensures(_statusBarText == Contract.OldValue(_statusBarText));
+            Contract.Ensures(_autoCadPath == Contract.OldValue(_autoCadPath));
+            Contract.Ensures(_cmdBrowse == Contract.OldValue(_cmdBrowse));
+            Contract.Ensures(_cmdPrint == Contract.OldValue(_cmdPrint));
+        }
+
         /// <summary>
         /// Checks param path to see if it is a valid AutoCAD folder
         /// </summary>
         /// <param name="path">Path to AutoCAD folder</param>
         /// <returns>true if valid</returns>
+        [Pure]
         private bool IsValidPath(string path)
         {
-            System.Console.WriteLine($"IsValidPath called with: {path}");
-
             return new Validators.FolderExistsValidator()
                 .Validate(path, System.Globalization.CultureInfo.CurrentCulture)
                 .IsValid;
@@ -86,7 +125,7 @@ namespace AutoCAD_Version
         /// <summary>
         /// Uses CommonDialog to get the AutoCAD folder from the user
         /// </summary>
-        /// <param name="_"></param>
+        /// <param name="_">paramater is not used</param>
         private void GetAutoCADFolder(string _)
         {
             var currentDirectory = System.IO.Directory.GetCurrentDirectory();
@@ -115,7 +154,15 @@ namespace AutoCAD_Version
                 // Update the view model for the path
                 AutoCadPath = dlg.FileName;
                 // Path must exist if we got here (validated by CommonDialog option EnsurePathExists)
-                Execute(AutoCadPath);
+                if (IsValidPath(AutoCadPath))
+                {
+                    FileList = Execute(AutoCadPath);
+                }
+                else
+                {
+                    FileList = new ObservableCollection<FileVersion>();
+                    System.Windows.MessageBox.Show("No AutoCAD files found", "Folder not found or no files in folder");
+                }
             }
         }
 
@@ -123,18 +170,32 @@ namespace AutoCAD_Version
         /// Populate the ListView with a list of filenames and versions
         /// </summary>
         /// <param name="path">AutoCAD filepath</param>
-        private void Execute(string path)
+        /// <returns>List of Files and their versions</returns>
+        /// <remarks>
+        /// Requires: path must be valid
+        /// Requires: _fileSummary must be populated
+        /// Ensures: result is not null and populated with at least one value
+        /// </remarks>
+
+        private ObservableCollection<FileVersion> Execute(string path)
         {
-            // AutoCAD path must already exist because the command canExecute includes a valiator
+            Contract.Requires(IsValidPath(path), "MainWindowModel.Execute: the path must exist and contain at least one AutoCAD file");
+            Contract.Requires(_fileSummary != null, "Before MainWindowModel.Execute is called _fileSummary must be populated ");
 
-            // create a list of FileVersion records from the folder
-            FileList = fileSummary.GetFileList(path);
+            Contract.Ensures(Contract.Result<ObservableCollection<FileVersion>>() != null);
+            Contract.Ensures(Contract.Result<ObservableCollection<FileVersion>>().Count > 0);
 
-            var summaryInfo = fileSummary.GetSummaryInfo();
-            if (summaryInfo.versionsFound.Count() == 1)
-                StatusBarText = $"{summaryInfo.NumberOfDWGFiles} file(s) found, Version: {summaryInfo.versionsFound.First().Item1}";
+            var summaryInfo = _fileSummary.GetSummaryInfo2();
+            Contract.Assert(summaryInfo.VersionsFound != null, "summaryInfo.VersionsFound cannot be null");
+
+            if (summaryInfo?.VersionsFound?.Count() == 1)
+                StatusBarText = $"{summaryInfo?.NumberOfDWGFiles} file(s) found, Version: {summaryInfo?.VersionsFound?.FirstOrDefault().Item1}";
             else
                 StatusBarText = $"Multiple versions found";
+
+            // create a list of FileVersion records from the folder
+            return _fileSummary.GetFileList(path);
+
         }
 
         /// <summary>
@@ -142,20 +203,22 @@ namespace AutoCAD_Version
         /// Note: because the Can Execute of the Command Checks for
         /// for a valid path, we do not need to repeat the check here
         /// </summary>
-        /// <param name="path">Folder containing the files</param>
-        /// <param name="files">List of files and their versions</param>
+        /// <param name=_">Not Used</param>
         private void Print(string _)
         {
-            var printResult = (new FileVersionPrinter(FileList, AutoCadPath))
+            if (FileList != null && IsValidPath(AutoCadPath))
+            {
+                var printResult = (new FileVersionPrinter(FileList, AutoCadPath))
                 .Print();
 
-            if (printResult.Success)
-            {
-                StatusBarText = Properties.Resources.StatusBarPrompt1;
-            }
-            else
-            {
-                StatusBarText = printResult.ErrorMessage;
+                if (printResult.Success)
+                {
+                    StatusBarText = Properties.Resources.StatusBarPrompt1;
+                }
+                else
+                {
+                    StatusBarText = printResult.ErrorMessage;
+                }
             }
         }
 

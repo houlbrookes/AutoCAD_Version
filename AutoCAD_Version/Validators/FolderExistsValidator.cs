@@ -24,12 +24,12 @@ namespace AutoCAD_Version.Validators
             {
                 if (Directory.Exists(stringValue))
                 {
-                    var theDWGFiles = Directory.GetFiles(stringValue, "*.dwg");
+                    var theDWGFiles = Directory.GetFiles(stringValue, $"*.{PublicConstants.AUTOCAD_FILE_SUFFIX}");
                     var qtyOfFiles = theDWGFiles.Count();
 
                     if (qtyOfFiles == 0)
                     {
-                        return new ValidationResult(false, "No DWG files found in this folder");
+                        return new ValidationResult(false, $"No {PublicConstants.AUTOCAD_FILE_SUFFIX} files found in this folder");
                     }
                     else
                     {

@@ -21,17 +21,17 @@ namespace AutoCAD_Version
         const float FOOTER_PADDING_LINES = 4.5F;
 
         // Font to write the file version info and page footer
-        Font bodyFont;
+        Font _bodyFont;
         // Font for the title block
-        Font headingFont;
+        Font _headingFont;
         // Font for the headings
-        Font bodyUnderlineFont;
+        Font _bodyUnderlineFont;
         // Copy of the FileVersion data to print
         ObservableCollection<FileVersion> FileList { get; set; }
         // Folder path to display in the header
         string AutoCADpath { get; set; }
         // How many pages have been printed
-        int PagesSoFar = 0;
+        int _pagesSoFar = 0;
 
         /// <summary>
         /// Constructor for this Class
@@ -42,9 +42,9 @@ namespace AutoCAD_Version
         {
             FileList = fileList;
             AutoCADpath = autoCADpath;
-            bodyFont = new Font("Arial", 10);
-            bodyUnderlineFont = new Font("Arial", 10, FontStyle.Underline);
-            headingFont = new Font("Arial", 14, FontStyle.Bold | FontStyle.Underline);
+            _bodyFont = new Font("Arial", 10);
+            _bodyUnderlineFont = new Font("Arial", 10, FontStyle.Underline);
+            _headingFont = new Font("Arial", 14, FontStyle.Bold | FontStyle.Underline);
         }
 
         // Left, Right and Center formatting
@@ -105,7 +105,13 @@ namespace AutoCAD_Version
         /// <returns></returns>
         private int LinesPerPage(Graphics graphics, int marginBoundsHeight)
         {
-            return (int)Math.Floor(marginBoundsHeight / bodyFont.GetHeight(graphics));
+            var bodyFontHeight = _bodyFont.GetHeight(graphics);
+            double linesPerPage = 60D;
+            if (bodyFontHeight > 0F)
+            {
+                linesPerPage = Math.Floor(marginBoundsHeight / bodyFontHeight);
+            }
+            return (int) linesPerPage;
         }
 
         /// <summary>
@@ -115,14 +121,16 @@ namespace AutoCAD_Version
         /// <param name="ev"></param>
         private void PrintPageHandler(object sender, PrintPageEventArgs ev)
         {
-
             float leftMargin = ev.MarginBounds.Left;
             float topMargin = ev.MarginBounds.Top;
             float rightMargin = ev.MarginBounds.Right;
 
             // Calculate the number of lines per page.
-            int linesPerPage = (int)Math.Floor(ev.MarginBounds.Height / bodyFont.GetHeight(ev.Graphics));
+            int linesPerPage = LinesPerPage(ev.Graphics, ev.MarginBounds.Height);
+
             var filesPerPage = linesPerPage - STARTING_LINE;
+
+
             var totalPages = (int)Math.Ceiling(FileList.Count / (float)filesPerPage);
 
             DrawBox();
@@ -131,7 +139,7 @@ namespace AutoCAD_Version
 
             int count = STARTING_LINE - 1;
 
-            var rowsToSkip = PagesSoFar * filesPerPage;
+            var rowsToSkip = _pagesSoFar * filesPerPage;
 
             // Print a line for every file assigned to this page
             foreach (var pair in FileList.Skip(rowsToSkip).Take(filesPerPage))
@@ -142,11 +150,11 @@ namespace AutoCAD_Version
             }
 
             // Printed the Next Page
-            PagesSoFar += 1;
+            _pagesSoFar += 1;
 
             PrintFooter();
 
-            ev.HasMorePages = PagesSoFar < Math.Ceiling(FileList.Count / (float)filesPerPage);
+            ev.HasMorePages = _pagesSoFar < Math.Ceiling(FileList.Count / (float)filesPerPage);
 
             return; // return statement to indicate that there is no more code after this point
             
@@ -158,7 +166,7 @@ namespace AutoCAD_Version
                 // Print a box around the page
                 Pen blackPen = new Pen(Color.Black, 1);
 
-                var lineHeight = bodyFont.GetHeight(ev.Graphics);
+                var lineHeight = _bodyFont.GetHeight(ev.Graphics);
 
                 ev.Graphics.DrawRectangle(blackPen,
                     ev.MarginBounds.Left - BOX_PADDING,
@@ -174,15 +182,15 @@ namespace AutoCAD_Version
                 switch (theFont)
                 {
                     case FontType.Normal:
-                        fontToUse = bodyFont;
+                        fontToUse = _bodyFont;
                         break;
 
                     case FontType.Heading:
-                        fontToUse = headingFont;
+                        fontToUse = _headingFont;
                         break;
 
                     case FontType.NormalUnderline:
-                        fontToUse = bodyUnderlineFont;
+                        fontToUse = _bodyUnderlineFont;
                         break;
                 }
 
@@ -217,7 +225,7 @@ namespace AutoCAD_Version
             // Prints the footer
             void PrintFooter()
             {
-                PrintLine((int)linesPerPage, string.Format("Page {0} of {1}", PagesSoFar, totalPages), Formatting.Left);
+                PrintLine((int)linesPerPage, string.Format("Page {0} of {1}", _pagesSoFar, totalPages), Formatting.Left);
                 PrintLine((int)linesPerPage, string.Format("{0:dd MMM yyyy} {1:HH:mm}", DateTime.Now, DateTime.Now), Formatting.Right);
             }
 
@@ -228,20 +236,20 @@ namespace AutoCAD_Version
         // visual studio
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
-                    headingFont.Dispose();
-                    bodyFont.Dispose();
-                    bodyUnderlineFont.Dispose();
+                    _headingFont.Dispose();
+                    _bodyFont.Dispose();
+                    _bodyUnderlineFont.Dispose();
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

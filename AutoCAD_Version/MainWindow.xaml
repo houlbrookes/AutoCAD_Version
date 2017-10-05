@@ -13,10 +13,6 @@
             <local:MainWindowModel />
     </Window.DataContext>
     <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Margin" Value="5,0,5,0" />
-            <Setter Property="Width" Value="100" />
-        </Style>
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="Close" Executed="CommandBinding_Close"/>
@@ -103,10 +99,12 @@
                         ToolTip="Click to browse for the target folder then click Process Folder"
                         Command="{Binding Path=CmdBrowse}"
                         CommandParameter="{Binding Path=Text, ElementName=txtFilePath}"
+                        Style="{DynamicResource RoundCorner}"
                         >Browse</Button>
             <Button Name="btnPrint" 
                         ToolTip="Click to print this as a report"
                         Command="{Binding Path=CmdPrint}" CommandParameter="{Binding Path=Text, ElementName=txtFilePath}" 
+                        Style="{DynamicResource RoundCorner}"
                         >Print</Button>
         </StackPanel>
         <ListView Grid.Row="3" Margin="5,6" Background="AliceBlue"
