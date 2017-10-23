@@ -188,8 +188,8 @@ namespace AutoCAD_Version
             var summaryInfo = _fileSummary.GetSummaryInfo2();
             Contract.Assert(summaryInfo.VersionsFound != null, "summaryInfo.VersionsFound cannot be null");
 
-            if (summaryInfo?.VersionsFound?.Count() == 1)
-                StatusBarText = $"{summaryInfo?.NumberOfDWGFiles} file(s) found, Version: {summaryInfo?.VersionsFound?.FirstOrDefault().Item1}";
+            if (summaryInfo.VersionsFound?.Count() == 1)
+                StatusBarText = $"{summaryInfo.NumberOfDWGFiles} file(s) found, Version: {summaryInfo.VersionsFound?.FirstOrDefault().Item1}";
             else
                 StatusBarText = $"Multiple versions found";
 
