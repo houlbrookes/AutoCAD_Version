@@ -139,7 +139,7 @@ namespace AutoCAD_Version
                 InitialDirectory = currentDirectory,
 
                 AddToMostRecentlyUsedList = false,
-                AllowNonFileSystemItems = false,
+                AllowNonFileSystemItems = true,
                 DefaultDirectory = currentDirectory,
                 EnsureFileExists = true,
                 EnsurePathExists = true,
@@ -185,6 +185,8 @@ namespace AutoCAD_Version
             Contract.Ensures(Contract.Result<ObservableCollection<FileVersion>>() != null);
             Contract.Ensures(Contract.Result<ObservableCollection<FileVersion>>().Count > 0);
 
+            var result = _fileSummary.GetFileList(path);
+
             var summaryInfo = _fileSummary.GetSummaryInfo2();
             Contract.Assert(summaryInfo.VersionsFound != null, "summaryInfo.VersionsFound cannot be null");
 
@@ -194,7 +196,8 @@ namespace AutoCAD_Version
                 StatusBarText = $"Multiple versions found";
 
             // create a list of FileVersion records from the folder
-            return _fileSummary.GetFileList(path);
+            //return _fileSummary.GetFileList(path);
+            return result;
 
         }
 
